@@ -39,7 +39,7 @@ jobs:
       - name: Validate data directory
         run: |
           echo "Validating data directory..."
-          unitysvc_services validate data
+          unitysvc_services validate
 
       - name: Data validation summary
         if: always()
@@ -55,5 +55,6 @@ jobs:
           echo "### Schema Validation" >> $GITHUB_STEP_SUMMARY
           echo "- File references checked for existence" >> $GITHUB_STEP_SUMMARY
           echo "- JSON schema compliance verified" >> $GITHUB_STEP_SUMMARY
-          echo "- Jinja2 syntax validated in markdown files" >> $GITHUB_STEP_SUMMARY
           echo "- Directory name consistency checked" >> $GITHUB_STEP_SUMMARY
+          echo "- Service name uniqueness verified" >> $GITHUB_STEP_SUMMARY
+          echo "- Valid seller references confirmed" >> $GITHUB_STEP_SUMMARY

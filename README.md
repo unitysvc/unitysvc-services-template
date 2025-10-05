@@ -4,6 +4,8 @@
 
 Use this template to create your own service provider repository with automated validation and publishing workflows.
 
+📚 **[Full Documentation](https://unitysvc-services.readthedocs.io)** | 🚀 **[Getting Started Guide](https://unitysvc-services.readthedocs.io/en/latest/getting-started/)** | 📖 **[CLI Reference](https://unitysvc-services.readthedocs.io/en/latest/cli-reference/)**
+
 ## 🚀 Quick Start
 
 ### 1. Create Your Repository from Template
@@ -12,16 +14,25 @@ Use this template to create your own service provider repository with automated 
 2. Choose a name for your repository (e.g., `unitysvc-services-yourcompany`)
 3. Clone your new repository locally
 
-### 2. Customize Your Data
+### 2. Install unitysvc-services CLI
+
+```bash
+pip install unitysvc-services
+```
+
+See the [CLI Reference](https://unitysvc-services.readthedocs.io/en/latest/cli-reference/) for all available commands.
+
+### 3. Customize Your Data
 
 Replace the example data in the `data/` directory with your actual service information:
 
 **Required changes:**
 
-- [ ] Update `data/provider.toml` with your company information
-- [ ] Update `data/README.md` with your company description
-- [ ] Update `data/docs/` with your actual documentation and code examples
-- [ ] Replace example services in `data/services/` with your actual services
+- [ ] Update `data/seller.json` with your seller/marketplace information
+- [ ] Update `data/${provider}/provider.toml` with your company information
+- [ ] Update `data/${provider}/README.md` with your company description
+- [ ] Update `data/${provider}/docs/` with your actual documentation and code examples
+- [ ] Replace example services in `data/${provider}/services/` with your actual services
 
 **Recommended naming:**
 
@@ -29,205 +40,158 @@ Replace the example data in the `data/` directory with your actual service infor
 - Service names: Use descriptive names (e.g., "gpt-4-turbo", "claude-3-opus")
 - Keep names lowercase with hyphens (e.g., "my-service-name")
 
-### 3. Update Repository Title and Description
+See [Data Structure Documentation](https://unitysvc-services.readthedocs.io/en/latest/data-structure/) for complete details on file organization and naming rules.
 
-Edit the top of this README.md:
+### 4. Validate Your Data
 
-```markdown
-# UnitySVC Services - Your Company Name
+Before committing changes:
 
-This repository hosts service data for Your Company's digital services on the UnitySVC platform.
+```bash
+# Validate all files
+unitysvc_services validate
+
+# Format files to match requirements
+unitysvc_services format
 ```
 
 ## 📁 Repository Structure
 
 ```
 data/
-└── your-provider-name/              # Directory name must match provider name
-    ├── provider.toml                # Your provider metadata
-    ├── README.md                    # Your provider documentation
+├── seller.json                      # Seller metadata (ONE per repo)
+└── ${provider_name}/                # Directory name must match provider name
+    ├── provider.toml                # Provider metadata
+    ├── README.md                    # Provider documentation
     ├── docs/                        # Code examples and descriptions
     │   ├── code-example.py
     │   ├── code-example.js
     │   ├── code-example.sh
     │   └── description.md
     └── services/                    # Service definitions
-        └── your-service-name/
+        └── ${service_name}/         # Directory name must match service name
             ├── service.json         # Service offering (technical specs)
-            └── svcreseller.json     # Service listing (user-facing info)
+            └── listing-${seller}.json  # Service listing (user-facing info)
 ```
 
-**Important**: The directory name under `data/` must match the `name` field in `provider.toml`.
+**Important**:
+- Directory names must match the `name` fields in their respective files
+- Only ONE seller file per repository
+- Both service offerings and listings go under the same `services/${service_name}/` directory
 
-## 🛠️ Setup
+See [Data Structure Documentation](https://unitysvc-services.readthedocs.io/en/latest/data-structure/) for complete details.
 
-### Install unitysvc-services
+## 🤖 GitHub Actions Workflows
 
-The `unitysvc-services` package provides CLI tools for validating and publishing service data:
+This template includes three automated workflows to streamline your development process:
 
-```bash
-pip install unitysvc-services
-```
+### 1. Validate Data Workflow
 
-### Install Pre-commit Hooks (Optional but Recommended)
+**File**: `.github/workflows/validate-data.yml`
+**Triggers**: Every pull request and push to main
 
-Pre-commit hooks automatically validate and format your data files before each commit:
+Automatically validates all data files to ensure:
+- Schema compliance
+- File references exist
+- Directory name consistency
+- Service name uniqueness
+- Valid seller references
 
-```bash
-# Install pre-commit (choose one method)
-pip install pre-commit           # Using pip
-brew install pre-commit           # On macOS using Homebrew
-conda install -c conda-forge pre-commit  # Using conda
+This prevents invalid data from being merged.
 
-# Install the git hooks in your repository
-cd /path/to/unitysvc-services-yourcompany
-pre-commit install
+### 2. Format Check Workflow
 
-# Test the hooks by running them manually on all files
-pre-commit run --all-files
-```
+**File**: `.github/workflows/format-check.yml`
+**Triggers**: Every pull request and push to main
 
-The pre-commit hooks will automatically:
+Checks that all JSON and TOML files are properly formatted:
+- JSON files have 2-space indentation
+- Keys are sorted alphabetically
+- Files end with newlines
+- No trailing whitespace
 
-- Format JSON files with 2-space indentation
-- Validate JSON and TOML syntax
-- Remove trailing whitespace
-- Fix end-of-file formatting
-- Validate data files against schemas
+Run `unitysvc_services format` locally to auto-fix formatting issues.
 
-**Note**: You can also use `unitysvc_services format data` to format files manually without installing pre-commit hooks.
+### 3. Publish Data Workflow
 
-**Troubleshooting**: If the validate hook fails, ensure `unitysvc-services` is installed in your current Python environment:
+**File**: `.github/workflows/publish-data.yml`
+**Triggers**: Push to main branch (after PR merge)
 
-```bash
-pip install unitysvc-services
-# Or if using a virtual environment, activate it first
-source venv/bin/activate  # On Linux/macOS
-# or
-venv\Scripts\activate     # On Windows
-```
+Automatically publishes your data to the UnitySVC backend in the correct order:
 
-## 📝 Development Workflow
+1. Providers
+2. Sellers
+3. Service Offerings
+4. Service Listings
 
-### Create a New Service
+**Setup Required**: Configure GitHub secrets (see below).
 
-```bash
-# Create a new service offering
-unitysvc_services init-offering my-new-service
+### 4. Populate Services Workflow (Optional)
 
-# Create a new service listing
-unitysvc_services init-listing my-new-service
+**File**: `.github/workflows/populate-services.yml`
+**Triggers**:
+- Daily at 2 AM UTC (scheduled)
+- Manual trigger via GitHub Actions UI
 
-# Or copy from an existing service
-unitysvc_services init-offering my-new-service --source data/services/example-service
-```
+Automatically updates service data by:
 
-### Format Data Files
+1. Running `unitysvc_services populate` to execute provider-specific update scripts
+2. Formatting generated files
+3. Creating a pull request with changes (if any)
 
-Before committing, format your data files to match pre-commit requirements:
+**How It Works**:
 
-```bash
-# Format all files in the data directory
-unitysvc_services format data
-
-# Check if files are properly formatted without modifying them
-unitysvc_services format data --check
-
-# The formatter:
-# - Formats JSON files with 2-space indentation and sorted keys
-# - Removes trailing whitespace
-# - Ensures files end with a newline
-# - Reports changes made to each file
-```
-
-### Validate Data Locally
-
-Before committing changes, validate your data files:
-
-```bash
-# Validate all files in the data directory
-unitysvc_services validate data
-
-# The validator checks:
-# - Schema compliance
-# - File references exist
-# - Jinja2 template syntax
-# - Directory name consistency
-# - URL formats
-```
-
-### Publish Data Manually
-
-You can manually publish data to a UnitySVC backend:
-
-```bash
-# Set environment variables
-export UNITYSVC_BACKEND_URL="https://api.unitysvc.com"
-export UNITYSVC_API_KEY="your-api-key"
-
-# Publish all data
-unitysvc_services publish-providers data
-unitysvc_services publish-offerings data
-unitysvc_services publish-listings data
-
-# Or publish individual files
-unitysvc_services publish-provider data/provider.toml
-unitysvc_services publish-offering data/services/my-service/service.json
-unitysvc_services publish-listing data/services/my-service/svcreseller.json
-```
-
-### Populate Services (Optional)
-
-If your provider supports automated service updates, you can configure a `services_populator` section in provider.toml:
+The workflow scans your `data/` directory for provider files with a `services_populator` section:
 
 ```toml
+# data/my-provider/provider.toml
 [services_populator]
-command = ['scripts/update_services.py', '--force']
+command = "populate_services.py"
+
+[provider_access_info]
+API_KEY = "your-provider-api-key"
+API_ENDPOINT = "https://api.provider.com/v1"
 ```
 
-Then run the populate command:
+The `populate` command will:
+- Find all providers with `services_populator` configured
+- Execute the specified command (e.g., `populate_services.py`)
+- Pass environment variables from `provider_access_info`
+- Generate/update service files automatically
 
-```bash
-# Populate services for all providers
-unitysvc_services populate-services data
+**To Use This Workflow**:
 
-# Populate for specific provider
-unitysvc_services populate-services data --provider my-provider
+1. Add a `services_populator` section to your provider.toml
+2. Create a populate script that generates service data files
+3. Configure provider access credentials in `provider_access_info`
+4. The workflow will run daily or can be triggered manually
 
-# Dry-run to preview
-unitysvc_services populate-services data --dry-run
+See [Automated Workflow Documentation](https://unitysvc-services.readthedocs.io/en/latest/workflows/#automated-workflow) for details on writing populate scripts.
+
+**Example Populate Script**:
+
+```python
+#!/usr/bin/env python3
+"""Populate services from provider API."""
+import os
+import json
+from pathlib import Path
+
+# Get credentials from environment (injected from provider_access_info)
+api_key = os.environ.get("API_KEY")
+api_endpoint = os.environ.get("API_ENDPOINT")
+
+# Fetch services from provider API
+services = fetch_services(api_endpoint, api_key)
+
+# Generate service files
+for service in services:
+    service_dir = Path(f"services/{service['name']}")
+    service_dir.mkdir(parents=True, exist_ok=True)
+
+    # Write service offering
+    with open(service_dir / "service.json", "w") as f:
+        json.dump(generate_service_data(service), f, indent=2)
 ```
-
-The command will automatically:
-
-- Use environment variables from `provider_access_info` (api_key, api_endpoint, etc.)
-- Execute your custom update script
-- Generate/update service files in your data directory
-
-## 🤖 GitHub Actions
-
-This repository includes automated workflows:
-
-### Validate Data
-
-Runs on every pull request and push to main:
-
-- Validates all data files against schemas
-- Ensures data integrity before merging
-
-### Format Check
-
-Runs on every pull request and push to main:
-
-- Checks JSON/TOML formatting
-- Ensures consistent code style
-
-### Publish Data
-
-Runs automatically when changes are merged to `main`:
-
-- Publishes providers, service offerings, and service listings
-- Updates the configured UnitySVC backend
 
 ## 🔐 GitHub Secrets Configuration
 
@@ -241,15 +205,15 @@ To enable automatic publishing when changes are merged to `main`, configure the 
 
 ### Step 2: Add Secrets
 
-Click **New repository secret** and add the following secrets:
+Click **New repository secret** and add the following:
 
 #### `UNITYSVC_BACKEND_URL`
 
 - **Description**: The UnitySVC backend API URL
 - **Example values**:
-  - Production: `https://api.unitysvc.com`
-  - Staging: `https://staging.unitysvc.com`
-  - Development: `https://main.devel.unitysvc.com`
+  - Production: `https://api.unitysvc.com/api/v1`
+  - Staging: `https://staging.unitysvc.com/api/v1`
+  - Development: `https://main.devel.unitysvc.com/api/v1`
 
 #### `UNITYSVC_API_KEY`
 
@@ -270,65 +234,85 @@ After adding the secrets:
 4. Check the **Actions** tab to see the publishing workflow run
 5. Verify that data appears on your UnitySVC backend
 
-## 📄 File Formats
+## 📝 Development Workflow
 
-Both JSON and TOML formats are supported for service data:
+### Basic Commands
 
-### JSON Format
+```bash
+# Create new data files
+unitysvc_services init provider my-provider
+unitysvc_services init seller my-marketplace
+unitysvc_services init offering my-service
+unitysvc_services init listing my-listing
 
-```json
-{
-  "schema": "service_v1",
-  "name": "my-service",
-  "service_type": "llm",
-  "display_name": "My Service",
-  "description": "A high-performance digital service"
-}
+# Validate data locally
+unitysvc_services validate
+
+# Format data files
+unitysvc_services format
+
+# List local data
+unitysvc_services list providers
+unitysvc_services list sellers
+unitysvc_services list offerings
+unitysvc_services list listings
+
+# Publish manually (optional)
+export UNITYSVC_BACKEND_URL="https://api.unitysvc.com/api/v1"
+export UNITYSVC_API_KEY="your-api-key"
+unitysvc_services publish providers
+unitysvc_services publish sellers
+unitysvc_services publish offerings
+unitysvc_services publish listings
 ```
 
-### TOML Format
+For complete CLI documentation, see [CLI Reference](https://unitysvc-services.readthedocs.io/en/latest/cli-reference/).
 
-```toml
-schema = "service_v1"
-name = "my-service"
-service_type = "llm"
-display_name = "My Service"
-description = "A high-performance digital service"
+### Pre-commit Hooks (Recommended)
+
+Install pre-commit hooks to automatically validate and format files before each commit:
+
+```bash
+pip install pre-commit
+pre-commit install
 ```
 
-## 📚 Documentation
-
-For detailed information on data models and schemas:
-
-- **Provider Model**: Provider metadata, contact info, and branding
-- **Service Offering Model**: Technical specifications, pricing, API endpoints
-- **Service Listing Model**: User-facing information, documentation, code examples
-
-Refer to the [UnitySVC Services SDK documentation](https://github.com/unitysvc/unitysvc-services) for full schema details.
+The hooks will automatically format JSON files and validate data on every commit.
 
 ## 🔄 Contributing
 
 1. Create a new branch for your changes
 2. Make your changes to files in the `data/` directory
-3. Run `unitysvc_services validate data` to check your changes
-4. Commit your changes (pre-commit hooks will run automatically)
-5. Push your branch and create a pull request
-6. Once approved and merged, data will be automatically published
+3. Run `unitysvc_services validate` to check your changes
+4. Run `unitysvc_services format` to format files
+5. Commit your changes (pre-commit hooks will run automatically)
+6. Push your branch and create a pull request
+7. Once approved and merged, data will be automatically published
+
+## 📚 Documentation
+
+For detailed information:
+
+- **[Getting Started](https://unitysvc-services.readthedocs.io/en/latest/getting-started/)** - Installation and first steps
+- **[Data Structure](https://unitysvc-services.readthedocs.io/en/latest/data-structure/)** - File organization rules
+- **[Workflows](https://unitysvc-services.readthedocs.io/en/latest/workflows/)** - Manual and automated patterns
+- **[CLI Reference](https://unitysvc-services.readthedocs.io/en/latest/cli-reference/)** - All commands and options
+- **[File Schemas](https://unitysvc-services.readthedocs.io/en/latest/file-schemas/)** - Schema specifications
 
 ## 💡 Tips
 
-- **Keep service names consistent**: Use the same name across `service.json`, `svcreseller.json`, and directory names
-- **Test locally first**: Always run `unitysvc_services validate data` before pushing
+- **Keep service names consistent**: Use the same name across `service.json`, `listing-*.json`, and directory names
+- **Test locally first**: Always run `unitysvc_services validate` before pushing
 - **Use pre-commit hooks**: They catch formatting and validation errors early
 - **Document your services**: Good documentation helps users understand and adopt your services
-- **Version your services**: Consider including version numbers in service names (e.g., `my-service-v2`)
+- **Publishing order matters**: Always publish in order: providers → sellers → offerings → listings
 
 ## 📞 Support
 
 For issues or questions:
 
 - **UnitySVC Services SDK**: https://github.com/unitysvc/unitysvc-services
-- **UnitySVC Documentation**: https://docs.unitysvc.com
+- **Documentation**: https://unitysvc-services.readthedocs.io
 - **Issues**: Open an issue in this repository
 
 ## 📜 License
