@@ -1,12 +1,12 @@
 {
-  "schema": "seller_v1",
-  "time_created": "2025-01-15T10:00:00Z",
-  "name": "svcreseller",
-  "display_name": "Digital Service Reseller",
-  "seller_type": "organization",
-  "contact_email": "support@unitysvc.com",
   "account_manager": "admin",
+  "contact_email": "support@unitysvc.com",
   "description": "A seller that is dedicated to bringing existing digital services to the unitysvc platform",
+  "display_name": "Digital Service Reseller",
   "is_active": true,
-  "is_verified": false
+  "is_verified": false,
+  "name": "svcreseller",
+  "schema": "seller_v1",
+  "seller_type": "organization",
+  "time_created": "2025-01-15T10:00:00Z"
 }
