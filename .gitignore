@@ -40,10 +40,13 @@ Thumbs.db
 
 # Test outputs
 *.env
-failed_*.env
 *.log
 
 # Secrets (never commit these)
 .secrets
 *.pem
 *.key
+failed*
+*.out
+*.err
+*.status
