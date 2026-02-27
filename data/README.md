@@ -45,7 +45,7 @@ Commit and push your changes. The GitHub workflow will automatically upload when
 Or upload manually:
 
 ```bash
-export UNITYSVC_BASE_URL="https://api.unitysvc.com/v1"
+export SERVICE_BASE_URL="https://api.unitysvc.com/v1"
 export UNITYSVC_API_KEY="your-api-key"
 usvc services upload
 ```
